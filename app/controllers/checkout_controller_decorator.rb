@@ -68,27 +68,28 @@ CheckoutController.class_eval do
       @order.special_instructions = @ppx_details.params["note"]
 
       unless payment_method.preferred_no_shipping
-        ship_address = @ppx_details.address
-        order_ship_address = Address.new :firstname  => @ppx_details.params["first_name"],
+        bill_address = @ppx_details.address
+        order_bill_address = Address.new :firstname  => @ppx_details.params["first_name"],
                                          :lastname   => @ppx_details.params["last_name"],
-                                         :address1   => ship_address["address1"],
-                                         :address2   => ship_address["address2"],
-                                         :city       => ship_address["city"],
-                                         :country    => Country.find_by_iso(ship_address["country"]),
-                                         :zipcode    => ship_address["zip"],
+                                         :address1   => bill_address["address1"],
+                                         :address2   => bill_address["address2"],
+                                         :city       => bill_address["city"],
+                                         :country    => Country.find_by_iso(bill_address["country"]),
+                                         :zipcode    => bill_address["zip"],
                                          # phone is currently blanked in AM's PPX response lib
-                                         :phone      => @ppx_details.params["phone"] || "(not given)"
+                                         # :phone      => @ppx_details.params["phone"] || "(not given)"
+                                         :phone      => @order.bill_address.phone || @order.ship_address.phone
 
-        if (state = State.find_by_abbr(ship_address["state"]))
-          order_ship_address.state = state
+        if (state = State.find_by_abbr(bill_address["state"]))
+          order_bill_address.state = state
         else
-          order_ship_address.state_name = ship_address["state"]
+          order_bill_address.state_name = bill_address["state"]
         end
 
-        order_ship_address.save!
+        order_bill_address.save!
 
-        @order.ship_address = order_ship_address
-        @order.bill_address = order_ship_address unless @order.bill_address
+        @order.bill_address = order_bill_address 
+        @order.ship_address = order_bill_address unless @order.ship_address
       end
       @order.save
 
@@ -316,7 +317,7 @@ CheckoutController.class_eval do
 
     # Forcing Guest Checkout on PayPal to show Credit Card
     opts[:allow_guest_checkout] = true
-    
+
     opts
   end
 
