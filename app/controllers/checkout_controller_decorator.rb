@@ -7,9 +7,6 @@ CheckoutController.class_eval do
     opts.merge!(address_options(@order))
     @gateway = paypal_gateway
 
-    # Forcing Guest Checkout on PayPal to show Credit Card
-    opts[:allow_guest_checkout] = true
-
     if Spree::Config[:auto_capture]
       @ppx_response = @gateway.setup_purchase(opts[:money], opts)
     else
@@ -317,6 +314,9 @@ CheckoutController.class_eval do
     # suggest current user's email or any email stored in the order
     opts[:email] = current_user ? current_user.email : order.email
 
+    # Forcing Guest Checkout on PayPal to show Credit Card
+    opts[:allow_guest_checkout] = true
+    
     opts
   end
 
